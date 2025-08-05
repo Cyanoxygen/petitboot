@@ -61,7 +61,12 @@ static void __attribute__((format(__printf__, 4, 5))) update_status(
  */
 static int kexec_load(struct boot_task *boot_task)
 {
+// Can't really determine if KEXEC_FILE_LOAD is available.
+#ifdef PLATFORM_GENERIC
+	const char *load_args[] = {"-l", "-c"};
+#else
 	const char *load_args[] = {"-l", "-s"};
+#endif
 	const struct system_info *sysinfo;
 	struct process *process;
 	char *s_initrd = NULL;
@@ -129,14 +134,14 @@ static int kexec_load(struct boot_task *boot_task)
 		assert(s_initrd);
 		*p++ = s_initrd;	 /* 4 */
 	}
-
+#ifndef PLATFORM_GENERIC
 	if (local_dtb) {
 		s_dtb = talloc_asprintf(boot_task, "--dtb=%s",
 						local_dtb);
 		assert(s_dtb);
 		*p++ = s_dtb;		 /* 5 */
 	}
-
+#endif
 	s_args = talloc_asprintf(boot_task, "--append=%s",
 				boot_task->args ?: "\"\"");
 	assert(s_args);
