@@ -21,6 +21,13 @@ utils_pb_config_LDADD = $(top_builddir)/lib/libpbcore.la \
 		  $(top_builddir)/discover/platform.ro \
 		  $(ELF_LIBS)
 
+if PLATFORM_GENERIC
+utils_pb_config_LDADD += \
+	$(BLKID_LIBS) \
+	$(MOUNT_LIBS) \
+	$(ZLIB_LIBS)
+endif
+
 utils_hooks_30_dtb_updates_SOURCES = utils/hooks/30-dtb-updates.c
 utils_hooks_30_dtb_updates_LDADD = $(top_builddir)/lib/libpbcore.la \
 		$(FDT_LIBS)

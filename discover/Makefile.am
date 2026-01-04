@@ -61,6 +61,13 @@ discover_pb_discover_LDADD = \
 	$(UDEV_LIBS) \
 	$(ELF_LIBS)
 
+if PLATFORM_GENERIC
+discover_pb_discover_LDADD += \
+	$(BLKID_LIBS) \
+	$(MOUNT_LIBS) \
+	$(ZLIB_LIBS)
+endif
+
 discover_pb_discover_LDFLAGS = \
 	$(AM_LDFLAGS) \
 	$(DEVMAPPER_LIBS)
@@ -90,6 +97,10 @@ endif
 
 if PLATFORM_POWERPC
 discover_platform_ro_SOURCES += discover/platform-powerpc.c
+endif
+
+if PLATFORM_GENERIC
+discover_platform_ro_SOURCES += discover/platform-generic.c
 endif
 
 # Build dummy last to put it at the end of the platforms section.

@@ -360,6 +360,7 @@ AS_IF(
 	[AS_CASE([$host],
 		[aarch64-*-*],   [enable_platform_arm64="yes"],
 		[powerpc*-*-*],  [enable_platform_powerpc="yes"],
+		[*-*-*],  [enable_platform_generic="yes"],
 	)]
 )
 
@@ -388,6 +389,38 @@ AC_ARG_ENABLE(
 		[build support for the PS3 game console [default=no]]
 	)])
 AM_CONDITIONAL([PLATFORM_PS3], [test "x$enable_platform_ps3" = "xyes"])
+
+AC_ARG_ENABLE(
+	[platform-generic],
+	[AS_HELP_STRING(
+		[--enable-platform-generic],
+		[build support for generic platforms [default=no]]
+	)]
+)
+
+AS_IF(
+	[test "x$enable_platform_generic" = "xyes"],
+	AC_CHECK_LIB(
+		[blkid], [blkid_new_probe],
+		[BLKID_LIBS=-lblkid],
+		[AC_MSG_FAILURE([libblkid is required for the generic platform support.])]
+	)
+)
+AS_IF(
+	[test "x$enable_platform_generic" = "xyes"],
+	[AC_CHECK_LIB(
+		[mount], [mnt_new_context],
+		[MOUNT_LIBS=-lmount],
+		[AC_MSG_FAILURE([libmount is required for the generic platform support.])]
+	)
+	AC_CHECK_LIB(
+		[z], [crc32],
+		[ZLIB_LIBS=-lz],
+		[AC_MSG_FAILURE([zlib is required for the generic platform support.])]
+	)
+	AC_DEFINE(PLATFORM_GENERIC, 1, [Generic platform support])]
+)
+AM_CONDITIONAL([PLATFORM_GENERIC], [test "x$enable_platform_generic" = "xyes"])
 
 AC_ARG_ENABLE(
 	[debug],
@@ -483,9 +516,12 @@ AS_IF(
 		AC_SUBST([DEFAULT_CPPFLAGS], ["-DNDEBUG"])
 	]
 )
- 
+
 AC_SUBST([UDEV_LIBS])
 AC_SUBST([ELF_LIBS])
+AC_SUBST([ZLIB_LIBS])
+AC_SUBST([BLKID_LIBS])
+AC_SUBST([MOUNT_LIBS])
 AC_SUBST([DEVMAPPER_LIBS])
 AC_SUBST([CRYPT_LIBS])
 AC_SUBST([FDT_LIBS])
