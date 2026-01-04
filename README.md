@@ -1,30 +1,31 @@
-# Petitboot - A kexec-based bootloader
+Petitboot with file backed parameter storage
+============================================
 
-Petitboot is an operating system bootloader based on Linux kexec.  It can load any operating system image that supports the Linux kexec re-boot mechanism like Linux and FreeBSD.
-Petitboot can load images from any device that can be mounted by Linux, and can also load images from the network using the HTTP, HTTPS, NFS, SFTP, and TFTP protocols.
+[Original README](./README.original.md)
 
-Current platform support includes PowerPC/POWER with OPAL, the Sony Playstation 3, and ARM64 with ACPI.  Petitboot can be built and run on other platforms, but it will not include all available features.
+This Petitboot fork enables devices without proper NVRAM support to use a file as the configuration storage.
 
-See the petitboot [man pages](man) for more info.
+It uses a block based format to store the configuration data (everything in the "System Configuration" menu), thus it is not human-readable.
 
-## Development
+Usage
+=====
 
-Petitboot's home is at [github.com](https://github.com/open-power/petitboot); clone it with:
+> [!NOTE]
+> It is recommended to build this Petitboot environment with Buildroot.
 
-    git clone https://github.com/open-power/petitboot
+1. Enable `BR2_PACKAGE_UTIL_LINUX_LIBMOUNT`, `BR2_PACKAGE_UTIL_LINUX_LIBBLKID` and `BR2_PACKAGE_ZLIB`.
+2. Apply [the diff](https://github.com/open-power/petitboot/compare/master...Cyanoxygen:petitboot:cyan/master.patch) ([View the diff in GitHub UI here](https://github.com/open-power/petitboot/compare/master...Cyanoxygen:petitboot:cyan/master)).
+   - You can download the patch into `packages/petitboot/` with a `.patch` extension.
+3. Add `PETITBOOT_AUTORECONF = YES` at the beginning section of `packages/petitboot/petitboot.mk`, since the patch modifies `configure.ac`.
+4. Enable the petitboot package.
+5. Run `make petitboot-dirclean && make` to build.
+6. To specify a filesystem for the config block file, either:
+   - Create an empty file `/boot/petitboot.txt` in the filesystem to signify that this filesystem is available to Petitboot.
+   - Add `PETITBOOT_CONFIG_BLOCK_PARTITION_UUID=UUID_HERE` to the kernel command line arguments. It supports FAT volume IDs in `ABCD-ABCD` format and GUIDs as seen in other filesystems.
+7. Boot the built initramfs image, it will initialize a config block file with default settings at `/boot/pbconfig.bin`.
+8. Try changing a setting and saving.
 
-Development and discussion occurs on the Petitboot mailing list: [petitboot@lists.ozlabs.org](https://lists.ozlabs.org/listinfo/petitboot).
+Notes
+=====
 
-## Building
-
-For an example of building Petitboot for distribution in a Linux image, see [op-build](https://github.com/open-power/op-build/tree/master/openpower/package/petitboot) or [petitboot--buildroot](https://github.com/glevand/petitboot--buildroot).
-
-To build locally for development/debug (with the ncurses UI for example):
-```
-./bootstrap
-./configure
-make
-
-./discover/pb-discover --help
-./ui/ncurses/petitboot-nc --help
-```
+This fork is intended for MIPS Loongson devices with a PMON firmware, or an early "Loongson EFI (LEFI)" firmware. Petitboot being able to parse GRUB configuration file makes it feasible.
