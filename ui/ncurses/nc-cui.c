@@ -588,6 +588,7 @@ void cui_show_sysinfo(struct cui *cui)
 
 static void cui_config_exit(struct cui *cui)
 {
+	set_current_item(cui->main->ncm, current_item(cui->main->ncm));
 	cui_set_current(cui, &cui->main->scr);
 	talloc_free(cui->config_screen);
 	cui->config_screen = NULL;
@@ -1117,6 +1118,8 @@ static int cui_boot_option_add(struct device *dev, struct boot_option *opt,
 		top = top < idx ? idx - rows + 1 : idx;
 
 		set_top_row(menu->ncm, top);
+		set_current_item(menu->ncm, menu->items[1]);
+	} else {
 		set_current_item(menu->ncm, selected);
 	}
 
@@ -1227,7 +1230,7 @@ static int cui_device_add(struct device *dev, void *arg)
 
 		set_top_row(menu->ncm, top);
 		set_current_item(menu->ncm, selected);
-	}
+		}
 
 	if (cui->current == &menu->scr)
 		nc_scr_post(cui->current);
@@ -1462,6 +1465,8 @@ static int cui_plugins_remove(void *arg)
 	struct pmenu_item *item = NULL;
 	struct cui_opt_data *cod;
 	unsigned int i = 0;
+	ITEM *main_selected = current_item(cui->main->ncm);
+	bool main_from_config_entry = false;
 
 	pb_debug("%s\n", __func__);
 
@@ -1500,12 +1505,20 @@ static int cui_plugins_remove(void *arg)
 		if (item->on_execute != menu_plugin_execute)
 			continue;
 		cui->n_plugins = 0;
+		if (main_selected == cui->main->items[i]) {
+			main_from_config_entry = true;
+		}
 		pmenu_item_update(item, _("Plugins (0)"));
 		cui->main->items[i] = item->nci;
 		break;
 	}
 
 	set_menu_items(cui->main->ncm, cui->main->items);
+	if (main_from_config_entry) {
+		set_current_item(cui->main->ncm, main_selected);
+	} else {
+		set_current_item(cui->main->ncm, cui->main->items[1]);
+	}
 
 	if (cui->current == &cui->main->scr)
 		nc_scr_post(cui->current);
@@ -1743,7 +1756,7 @@ static struct pmenu *main_menu_init(struct cui *cui)
 
 	menu_opts_off(m->ncm, O_SHOWDESC);
 	set_menu_mark(m->ncm, " *");
-	set_current_item(m->ncm, i->nci);
+	set_current_item(m->ncm, m->items[1]);
 
 	return m;
 
